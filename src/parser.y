@@ -26,7 +26,7 @@
 %token BREAK
 %token CONTINUE
 %token RETURN
-%token <strval>     IDENTITY
+%token <strval>     IDENTIFIER
 %token <strval>     INT_NUMBER
 
 %type <strval> func_def
@@ -65,13 +65,25 @@
 // Grammar rules
 
 func_def
-    : type_dec IDENTITY '(' ')' '{' statement '}' { 
-        printf("FUNC_DEF\n"); printf("%s\n", $6); 
-        }
+    : type_dec IDENTIFIER '(' ')' '{' statement '}' 
+    { 
+        printf("FUNC_DEF\n"); 
+        printf("%s\n", $6); 
+    }
 
 statement
-    : sentence ';'              { printf("---STMT---\t"); printf("%s;\n", $1); $$ = concat($1, " ", ";\n");}
-    | statement sentence ';'    { printf("---STMT---\t"); printf("%s;\n", $2); $$ = concat($1, $2, ";\n");}
+    : sentence ';'              
+    { 
+        printf("---STMT---\t"); 
+        printf("%s;\n", $1); 
+        $$ = concat($1, " ", ";\n");
+    }
+    | statement sentence ';'    
+    { 
+        printf("---STMT---\t"); 
+        printf("%s;\n", $2); 
+        $$ = concat($1, $2, ";\n");
+    }
 ;
 
 sentence
@@ -82,40 +94,105 @@ sentence
 ;
 
 decl_stmt
-    : type_dec id_list  { printf("DECL\t"); $$ = concat(itoType($1), " ", $2); printf("%s\n", $$);}
+    : type_dec id_list  
+    { 
+        printf("DECL\t"); 
+        $$ = concat(itoType($1), " ", $2); 
+        printf("%s\n", $$);
+    }
 
 type_dec
     : INT               { $$ = 1; }
     | VOID              { $$ = 2; }
 
 id_list
-    : id_elem ',' id_list   { $$ = concat($1, ",", $3); printf("%s\n", $$); }
+    : id_elem ',' id_list   
+    { 
+        $$ = concat($1, ",", $3); 
+        printf("%s\n", $$); 
+    }
     | id_elem               { $$ = $1; }
 
 id_elem
-    : IDENTITY              { $$ = $1; }
+    : IDENTIFIER              { $$ = $1; }
     | assign_stmt           { $$ = $1; }
 
 assign_stmt
-    : IDENTITY '=' expr  { printf("ASSIGN\t"); $$ = concat($1, "=", $3); printf("%s\n", $$); }
+    : IDENTIFIER '=' expr  
+    { 
+        printf("ASSIGN\t"); 
+        $$ = concat($1, "=", $3); 
+        printf("%s\n", $$); 
+    }
 
 expr
-    : expr '+' expr         { printf("ADD\t"); $$ = concat($1, "+", $3); printf("%s\n", $$); }
-    | expr '-' expr         { printf("SUB\t"); $$ = concat($1, "-", $3); printf("%s\n", $$); }
-    | expr '*' expr         { printf("MUL\t"); $$ = concat($1, "*", $3); printf("%s\n", $$); }
-    | expr '/' expr         { printf("DIV\t"); $$ = concat($1, "/", $3); printf("%s\n", $$); }
-    | expr '%' expr         { printf("MOD\t"); $$ = concat($1, "%", $3); printf("%s\n", $$); }
-    | '(' expr ')'          { printf("PAREN\t"); $$ = concat("(", $2, ")"); printf("%s\n", $$); }
-    | '-' expr %prec NEG    { printf("NEG\t"); $$ = concat("-", $2, ""); printf("%s\n", $$); }
-    | '+' expr %prec POS    { printf("POS\t"); $$ = concat("+", $2, ""); printf("%s\n", $$); }
+    : expr '+' expr         
+    { 
+        printf("ADD\t"); 
+        $$ = concat($1, "+", $3); 
+        printf("%s\n", $$); 
+    }
+    | expr '-' expr         
+    { 
+        printf("SUB\t"); 
+        $$ = concat($1, "-", $3); 
+        printf("%s\n", $$); 
+    }
+    | expr '*' expr         
+    { 
+        printf("MUL\t"); 
+        $$ = concat($1, "*", $3); 
+        printf("%s\n", $$); 
+    }
+    | expr '/' expr         
+    { 
+        printf("DIV\t"); 
+        $$ = concat($1, "/", $3); 
+        printf("%s\n", $$); 
+    }
+    | expr '%' expr         
+    { 
+        printf("MOD\t"); 
+        $$ = concat($1, "%", $3); 
+        printf("%s\n", $$); 
+    }
+    | '(' expr ')'          
+    { 
+        printf("PAREN\t"); 
+        $$ = concat("(", $2, ")"); 
+        printf("%s\n", $$); 
+    }
+    | '-' expr %prec NEG    
+    { 
+        printf("NEG\t"); 
+        $$ = concat("-", $2, ""); 
+        printf("%s\n", $$); 
+    }
+    | '+' expr %prec POS    
+    { 
+        printf("POS\t"); 
+        $$ = concat("+", $2, ""); 
+        printf("%s\n", $$); 
+    }
     | factor                { $$ = $1;}
 
 factor
-    : INT_NUMBER        { printf("INTEGER \t%s\n", $1);}
-    | IDENTITY          { printf("IDENTITY\t%s\n", $1);}
+    : INT_NUMBER        
+    { 
+        printf("INTEGER \t%s\n", $1);
+    }
+    | IDENTIFIER          
+    { 
+        printf("IDENTIFIER\t%s\n", $1);
+    }
 
 return_stmt
-    : RETURN expr       { printf("RETURN\t"); $$ = concat("return", " ", $2); printf("%s\n", $$); }
+    : RETURN expr       
+    { 
+        printf("RETURN\t"); 
+        $$ = concat("return", " ", $2); 
+        printf("%s\n", $$); 
+    }
 
 %%
 

@@ -26,7 +26,7 @@ continue    { return CONTINUE; }
 return      { return RETURN; }
 	
 	/* user variable */
-[a-zA-Z][a-zA-Z0-9_]*       { yylval.strval = strdup(yytext); return IDENTITY; }
+[a-zA-Z][a-zA-Z0-9_]*       { yylval.strval = strdup(yytext); return IDENTIFIER; }
 	/* integer numbers */
 -?[0-9]+                    { yylval.strval = strdup(yytext); return INT_NUMBER; }
 	/* C-type strings */
