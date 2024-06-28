@@ -6,7 +6,7 @@
 int main(int argc, const char *args[])
 {
 	/* 将注释去掉就能看到stack具体是怎么工作的.. */
-    /* yydebug = 1; */
+    // yydebug = 1;
 
 	extern FILE *yyin;
 	if(argc > 1 && (yyin = fopen(args[1], "r")) == NULL) {

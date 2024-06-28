@@ -15,3 +15,14 @@ char* concat(const char* a, const char* b, const char* c) {
     sprintf(temp, "%s%s%s", a, b, c);
     return temp;
 }
+
+char* itoType(int type) {
+    switch (type) {
+        case 1:
+            return "int";
+        case 2:
+            return "void";
+        default:
+            return "unknown";
+    }
+}

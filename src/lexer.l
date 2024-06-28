@@ -36,7 +36,10 @@ return      { return RETURN; }
 [-+&~|&^/%*(){},.;!~<>=]       { return yytext[0]; }
 "&&"                    { return AND; }
 "||"                    { return OR; }
-
+"=="                    { return EQ; }
+"!="                    { return NE; }
+"<="                    { return LE; }
+">="                    { return GE; }
 
     /* comments */
 "//".*;
