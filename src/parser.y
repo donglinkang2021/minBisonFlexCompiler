@@ -29,7 +29,9 @@
 %token <strval>     IDENTIFIER
 %token <strval>     INT_NUMBER
 
-%type <strval> func_def
+%type <strval> program
+%type <strval> function
+%type <strval> parameter
 
 %type <strval> statement
 %type <strval> sentence 
@@ -44,7 +46,7 @@
 %type <strval> expr 
 %type <strval> factor 
 
-%start func_def
+%start program
 
 // Precedence and associativity
 
@@ -64,12 +66,46 @@
 
 // Grammar rules
 
-func_def
-    : type_dec IDENTIFIER '(' ')' '{' statement '}' 
+program
+    : function
     { 
-        printf("FUNC_DEF\n"); 
-        printf("%s\n", $6); 
+        printf("function\n");
+        printf("%s\n", $1); 
     }
+    | program function
+    { 
+        printf("%s\n", $2); 
+    }
+
+function
+    : type_dec IDENTIFIER '(' parameter ')' '{' statement '}' 
+    { 
+        char* func_def = concat(itoType($1), " ", $2);
+        char* func_params = concat("(", $4, ")");
+        char* func_body = concat("{\n", $7, "}");
+        $$ = concat(func_def, func_params, func_body);
+    }
+
+parameter
+    : %empty
+    { 
+        $$ = " "; 
+    }
+    | type_dec IDENTIFIER
+    { 
+        printf("parameter\t"); 
+        $$ = concat(itoType($1), " ", $2); 
+        printf("%s\n", $$); 
+    }
+    | parameter ',' type_dec IDENTIFIER
+    { 
+        printf("parameter\t"); 
+        char* para1 = $1;
+        char* para2 = concat(itoType($3), " ", $4);
+        $$ = concat(para1, ", ", para2); 
+        printf("%s\n", $$); 
+    }
+    
 
 statement
     : sentence ';'              

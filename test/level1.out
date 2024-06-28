@@ -1,16 +1,37 @@
 mov DWORD PTR [ebp-4], 0 # int a
 mov DWORD PTR [ebp-8], 0 # int b
-mov DWORD PTR [ebp-12], 0 # int d
+mov DWORD PTR [ebp-12], 0 # int c
+mov DWORD PTR [ebp-16], 0 # int d
 mov DWORD PTR [ebp-4], 1 # a = 1
 mov DWORD PTR [ebp-8], 2 # b = 2
-mov eax, DWORD PTR [ebp-4] # d = a + b
+mov DWORD PTR [ebp-12], 3 # c = 3
+mov eax, DWORD PTR [ebp-4] # d = ( a + b * 2 ) / c - 3
 push eax
 mov eax, DWORD PTR [ebp-8]
+push eax
+mov eax, 2
+push eax
+pop ebx
+pop eax
+imul eax, ebx
 push eax
 pop ebx
 pop eax
 add eax, ebx
 push eax
+mov eax, DWORD PTR [ebp-12]
+push eax
+pop ebx
 pop eax
-mov DWORD PTR [ebp-12], eax
-mov eax, DWORD PTR [ebp-12] # return d
+cdq
+idiv ebx
+push eax
+mov eax, 3
+push eax
+pop ebx
+pop eax
+sub eax, ebx
+push eax
+pop eax
+mov DWORD PTR [ebp-16], eax
+mov eax, DWORD PTR [ebp-16] # return d

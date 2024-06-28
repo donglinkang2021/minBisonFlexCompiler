@@ -1,37 +1,53 @@
-mov DWORD PTR [ebp-4], 0 # int a
-mov DWORD PTR [ebp-8], 0 # int b
-mov DWORD PTR [ebp-12], 0 # int c
-mov DWORD PTR [ebp-16], 0 # int d
-mov DWORD PTR [ebp-4], 1 # a = 1
-mov DWORD PTR [ebp-8], 2 # b = 2
-mov DWORD PTR [ebp-12], 3 # c = 3
-mov eax, DWORD PTR [ebp-4] # d = ( a + b * 2 ) / c - 3
+.intel_syntax noprefix
+.global main
+.extern printf
+.data
+format_str:
+.asciz "%d\n"
+.text
+main:
+push ebp
+mov ebp, esp
+sub esp, 0x100
+mov eax, 1
+mov DWORD PTR [ebp-4], eax
+push DWORD PTR [ebp-4]
+push offset format_str
+call printf
+add esp, 8
+mov eax, 12
+mov DWORD PTR [ebp-8], eax
+push DWORD PTR [ebp-8]
+push offset format_str
+call printf
+add esp, 8
+mov eax, 114514
+push eax
+mov eax, DWORD PTR [ebp-4]
 push eax
 mov eax, DWORD PTR [ebp-8]
-push eax
-mov eax, 2
-push eax
-pop ebx
-pop eax
-imul eax, ebx
 push eax
 pop ebx
 pop eax
 add eax, ebx
 push eax
-mov eax, DWORD PTR [ebp-12]
+mov eax, 10
 push eax
 pop ebx
 pop eax
 cdq
 idiv ebx
-push eax
-mov eax, 3
-push eax
+push edx
 pop ebx
 pop eax
-sub eax, ebx
+add eax, ebx
 push eax
 pop eax
-mov DWORD PTR [ebp-16], eax
-mov eax, DWORD PTR [ebp-16] # return d
+mov DWORD PTR [ebp-12], eax
+push DWORD PTR [ebp-12]
+push offset format_str
+call printf
+add esp, 8
+mov eax, 0
+leave
+ret
