@@ -34,6 +34,7 @@
 %type <strval> parameter
 %type <strval> argument
 
+%type <strval> statements
 %type <strval> statement
 %type <strval> sentence 
 
@@ -47,6 +48,9 @@
 %type <strval> call_stmt
 %type <strval> expr 
 %type <strval> factor 
+
+%type <strval> if_stmt
+%type <strval> while_stmt
 
 %start program
 
@@ -79,15 +83,17 @@ program
         printf("function\n");
         printf("%s\n", $2); 
     }
+    ;
 
 function
-    : type_dec IDENTIFIER '(' parameter ')' '{' statement '}' 
+    : type_dec IDENTIFIER '(' parameter ')' '{' statements '}' 
     { 
         char* func_def = concat(itoType($1), " ", $2);
         char* func_params = concat("(", $4, ")");
-        char* func_body = concat("{\n", $7, "}");
+        char* func_body = concat("{\n", $7, "\n}");
         $$ = concat(func_def, func_params, func_body);
     }
+    ;
 
 parameter
     : %empty
@@ -108,6 +114,7 @@ parameter
         $$ = concat(para1, ", ", para2); 
         printf("%s\n", $$); 
     }
+    ;
 
 argument
     : %empty
@@ -121,30 +128,42 @@ argument
     | argument ',' expr
     { 
         $$ = concat($1, ", ", $3); 
-    }    
+    }
+    ;   
+
+statements
+    : statement
+    { 
+        $$ = $1; 
+    }
+    | statements statement
+    { 
+        $$ = concat($1, "\n", $2); 
+    }
+    ;
 
 statement
     : sentence ';'              
     { 
-        printf("---STMT---\t"); 
-        printf("%s;\n", $1); 
         $$ = concat($1, " ", ";\n");
     }
-    | statement sentence ';'    
+    | if_stmt
     { 
-        printf("---STMT---\t"); 
-        printf("%s;\n", $2); 
-        $$ = concat($1, $2, ";\n");
+        $$ = $1; 
     }
-;
-
+    | while_stmt
+    {
+        $$ = $1; 
+    }
+    ;
+    
 sentence
     : decl_stmt         { $$ = $1; }
     | assign_stmt       { $$ = $1; }
     | return_stmt       { $$ = $1; }
     | call_stmt         { $$ = $1; }
-    | %empty            { $$ = 0; }
-;
+    | %empty            { $$ = " "; }
+    ;
 
 decl_stmt
     : type_dec id_list  
@@ -153,10 +172,12 @@ decl_stmt
         $$ = concat(itoType($1), " ", $2); 
         printf("%s\n", $$);
     }
+    ;
 
 type_dec
     : INT               { $$ = 1; }
     | VOID              { $$ = 2; }
+    ;
 
 id_list
     : id_elem ',' id_list   
@@ -165,11 +186,13 @@ id_list
         printf("%s\n", $$); 
     }
     | id_elem               { $$ = $1; }
+    ;
 
 id_elem
-    : IDENTIFIER              { $$ = $1; }
+    : IDENTIFIER            { $$ = $1; }
     | assign_stmt           { $$ = $1; }
     | call_stmt             { $$ = $1; }
+    ;
 
 assign_stmt
     : IDENTIFIER '=' expr  
@@ -178,6 +201,7 @@ assign_stmt
         $$ = concat($1, "=", $3); 
         printf("%s\n", $$); 
     }
+    ;
 
 expr
     : expr '=' expr         
@@ -313,6 +337,7 @@ expr
         printf("%s\n", $$); 
     }
     | factor                { $$ = $1;}
+    ;
 
 factor
     : INT_NUMBER        
@@ -328,6 +353,7 @@ factor
         $$ = $1; 
         printf("%s\n", $$);
     }
+    ;
 
 return_stmt
     : RETURN expr       
@@ -336,6 +362,7 @@ return_stmt
         $$ = concat("return", " ", $2); 
         printf("%s\n", $$); 
     }
+    ;
 
 call_stmt
     : IDENTIFIER '(' argument ')'
@@ -346,6 +373,38 @@ call_stmt
         $$ = concat(func_name, func_args, "");
         printf("%s\n", $$);
     }
+    ;
+
+if_stmt
+    : IF '(' expr ')' '{' statements '}'
+    {
+        printf("IF\t");
+        char* if_cond = concat("(", $3, ")");
+        char* if_body = concat("{\n", $6, "}");
+        $$ = concat("if ", if_cond, if_body);
+        printf("%s\n", $$);
+    }
+    | IF '(' expr ')' '{' statements '}' ELSE '{' statements '}'
+    {
+        printf("IF ELSE\t");
+        char* if_cond = concat("if (", $3, ")");
+        char* if_body = concat("{\n", $6, "}");
+        char* else_body = concat("else {\n", $10, "}");
+        $$ = concat(if_cond, if_body, else_body);
+        printf("%s\n", $$);
+    }
+    ;
+
+while_stmt
+    : WHILE '(' expr ')' '{' statements '}'
+    {
+        printf("WHILE\t");
+        char* while_cond = concat("(", $3, ")");
+        char* while_body = concat("{\n", $6, "}");
+        $$ = concat("while", while_cond, while_body);
+        printf("%s\n", $$);
+    }
+    ;
 
 %%
 
