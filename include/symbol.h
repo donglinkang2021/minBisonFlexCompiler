@@ -14,6 +14,7 @@ struct varrec
 
 typedef struct varrec varrec;
 
+// local variable table
 extern varrec *var_table;
 extern int var_count;
 extern int is_begin_decl;
@@ -23,3 +24,13 @@ varrec *getVar (char const *name);
 const char* getVarAddr (char const *name);
 void showAllVar (void);
 void freeAllVar (void);
+
+// argument table
+extern varrec *arg_table;
+extern int arg_count;
+
+varrec *putArg (char const *name);
+varrec *getArg (char const *name);
+const char* getArgAddr (char const *name);
+void showAllArg (void);
+void freeAllArg (void);

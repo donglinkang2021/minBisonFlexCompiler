@@ -4,6 +4,8 @@
     #include "symbol.h"
     varrec *var_table;
     int var_count = 0, is_begin_decl = 0;
+    varrec *arg_table;
+    int arg_count = 0;
     extern int yylex(void);
 %}
 
@@ -84,14 +86,18 @@ program
         printf("function\n");
         printf("%s\n", $1->origin); 
         showAllVar();
+        showAllArg();
         freeAllVar();
+        freeAllArg();
     }
     | program function
     { 
         printf("function\n");
         printf("%s\n", $2->origin); 
         showAllVar();
+        showAllArg();
         freeAllVar();
+        freeAllArg();
     }
     ;
 
@@ -114,6 +120,7 @@ parameter
     | type_dec IDENTIFIER
     { 
         $$ = new_code(concat(itoType($1), " ", $2->origin)); 
+        putArg($2->origin);
         is_begin_decl = 0;
     }
     | parameter ',' type_dec IDENTIFIER
@@ -121,6 +128,7 @@ parameter
         char* para1 = $1->origin;
         char* para2 = concat(itoType($3), " ", $4->origin);
         $$ = new_code(concat(para1, ", ", para2)); 
+        putArg($4->origin);
         is_begin_decl = 0;
     }
     ;
