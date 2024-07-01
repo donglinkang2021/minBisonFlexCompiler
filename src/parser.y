@@ -4,6 +4,7 @@
     #include "utils.h"
     #include "symbol.h"
     varrec *var_table;
+    int var_count = 0, is_begin_decl = 0;
     extern int yylex(void);
 }
 
