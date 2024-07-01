@@ -1,16 +1,12 @@
-int factorial(int n) {
-    if (n <= 1) {
-        return 1;
-    } else {
-        return n * factorial(n - 1);
-    }
-}
-
 int main() {
-    int i = 1;
-    while (i <= 5) {
-        println_int(factorial(i));
-        i = i + 1;
-    }
-    return 0;
+    int a9_das; 
+    int b; 
+    int c; 
+    a9_das = 1; 
+    println_int(a9_das); 
+    b = 12; 
+    println_int(b); 
+    c = 114514 + (a9_das + b)%10; 
+    println_int(c); 
+    return 0; 
 }

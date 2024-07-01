@@ -5,22 +5,28 @@
 format_str:
 .asciz "%d\n"
 .text
+
 main:
 push ebp
 mov ebp, esp
 sub esp, 0x100
+
 mov eax, 1
 mov DWORD PTR [ebp-4], eax
+
 push DWORD PTR [ebp-4]
 push offset format_str
 call printf
 add esp, 8
+
 mov eax, 12
 mov DWORD PTR [ebp-8], eax
+
 push DWORD PTR [ebp-8]
 push offset format_str
 call printf
 add esp, 8
+
 mov eax, 114514
 push eax
 mov eax, DWORD PTR [ebp-4]
@@ -44,10 +50,12 @@ add eax, ebx
 push eax
 pop eax
 mov DWORD PTR [ebp-12], eax
+
 push DWORD PTR [ebp-12]
 push offset format_str
 call printf
 add esp, 8
+
 mov eax, 0
 leave
 ret

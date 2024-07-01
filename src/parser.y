@@ -145,7 +145,7 @@ statements
 statement
     : sentence ';'              
     { 
-        $$ = concat($1, " ", ";\n");
+        $$ = concat($1, " ", ";");
     }
     | if_stmt
     { 
