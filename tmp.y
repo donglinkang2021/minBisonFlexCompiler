@@ -1,8 +1,14 @@
-
-%code top {
+%{
     #include <stdio.h>
     #include "utils.h"
+    #include "symbol.h"
+    varrec *var_table;
+    int var_count = 0, is_begin_decl = 0;
     extern int yylex(void);
+%}
+
+%code requires {
+#include "code.h"
 }
 
 // Terminals
@@ -14,7 +20,8 @@
 
 %union {
     int intval;
-    char *strval;
+    char* strval;
+    code* codeval;
 }
 
 %token INT
@@ -145,7 +152,7 @@ statements
 statement
     : sentence ';'              
     { 
-        $$ = concat($1, " ", ";\n");
+        $$ = concat($1, " ", ";");
     }
     | if_stmt
     { 
@@ -163,6 +170,8 @@ sentence
     | return_stmt       { $$ = $1; }
     | call_stmt         { $$ = $1; }
     | %empty            { $$ = " "; }
+    | BREAK             { $$ = "break";}
+    | CONTINUE          { $$ = "continue";} 
     ;
 
 decl_stmt
@@ -380,7 +389,7 @@ if_stmt
     {
         printf("IF\t");
         char* if_cond = concat("(", $3, ")");
-        char* if_body = concat("{\n", $6, "}");
+        char* if_body = concat("\n{\n", $6, "\n}\n");
         $$ = concat("if ", if_cond, if_body);
         printf("%s\n", $$);
     }
@@ -388,8 +397,8 @@ if_stmt
     {
         printf("IF ELSE\t");
         char* if_cond = concat("if (", $3, ")");
-        char* if_body = concat("{\n", $6, "}");
-        char* else_body = concat("else {\n", $10, "}");
+        char* if_body = concat("\n{\n", $6, "\n}\n");
+        char* else_body = concat("else \n{\n", $10, "\n}\n");
         $$ = concat(if_cond, if_body, else_body);
         printf("%s\n", $$);
     }
@@ -400,7 +409,7 @@ while_stmt
     {
         printf("WHILE\t");
         char* while_cond = concat("(", $3, ")");
-        char* while_body = concat("{\n", $6, "}");
+        char* while_body = concat("\n{\n", $6, "\n}\n");
         $$ = concat("while", while_cond, while_body);
         printf("%s\n", $$);
     }

@@ -5,7 +5,7 @@
 
 struct code
 {
-    char* description;
+    char* origin;
     char* assembly;
 };
 
