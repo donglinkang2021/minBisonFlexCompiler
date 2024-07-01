@@ -1,11 +1,14 @@
-
-%code top {
+%{
     #include <stdio.h>
     #include "utils.h"
     #include "symbol.h"
     varrec *var_table;
     int var_count = 0, is_begin_decl = 0;
     extern int yylex(void);
+%}
+
+%code requires {
+#include "code.h"
 }
 
 // Terminals
@@ -17,7 +20,8 @@
 
 %union {
     int intval;
-    char *strval;
+    char* strval;
+    code* codeval;
 }
 
 %token INT

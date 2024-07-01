@@ -14,6 +14,8 @@ struct varrec
 typedef struct varrec varrec;
 
 extern varrec *var_table;
+extern int var_count;
+extern int is_begin_decl;
 
 varrec *putvar (char const *name, int index);
 varrec *getvar (char const *name);

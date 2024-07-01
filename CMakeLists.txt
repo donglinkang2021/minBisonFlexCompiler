@@ -36,6 +36,7 @@ add_executable(
     ${SRC_DIR}/main.c
     ${SRC_DIR}/utils.c
     ${SRC_DIR}/symbol.c
+    ${SRC_DIR}/code.c
     ${LEXER_OUT}
     ${PARSER_OUT}
 )

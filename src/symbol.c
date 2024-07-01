@@ -6,6 +6,7 @@ varrec* putvar (char const *name, int index){
   res->index = index;
   res->next = var_table;
   var_table = res;
+  var_count++;
   return res;
 }
 
