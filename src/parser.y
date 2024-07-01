@@ -32,6 +32,7 @@
 %type <strval> program
 %type <strval> function
 %type <strval> parameter
+%type <strval> argument
 
 %type <strval> statement
 %type <strval> sentence 
@@ -43,6 +44,7 @@
 
 %type <strval> return_stmt 
 %type <strval> assign_stmt
+%type <strval> call_stmt
 %type <strval> expr 
 %type <strval> factor 
 
@@ -74,6 +76,7 @@ program
     }
     | program function
     { 
+        printf("function\n");
         printf("%s\n", $2); 
     }
 
@@ -105,7 +108,20 @@ parameter
         $$ = concat(para1, ", ", para2); 
         printf("%s\n", $$); 
     }
-    
+
+argument
+    : %empty
+    { 
+        $$ = " "; 
+    }
+    | expr
+    { 
+        $$ = $1; 
+    }
+    | argument ',' expr
+    { 
+        $$ = concat($1, ", ", $3); 
+    }    
 
 statement
     : sentence ';'              
@@ -126,6 +142,7 @@ sentence
     : decl_stmt         { $$ = $1; }
     | assign_stmt       { $$ = $1; }
     | return_stmt       { $$ = $1; }
+    | call_stmt         { $$ = $1; }
     | %empty            { $$ = 0; }
 ;
 
@@ -152,6 +169,7 @@ id_list
 id_elem
     : IDENTIFIER              { $$ = $1; }
     | assign_stmt           { $$ = $1; }
+    | call_stmt             { $$ = $1; }
 
 assign_stmt
     : IDENTIFIER '=' expr  
@@ -162,7 +180,79 @@ assign_stmt
     }
 
 expr
-    : expr '+' expr         
+    : expr '=' expr         
+    { 
+        printf("ASSIGN\t"); 
+        $$ = concat($1, "=", $3); 
+        printf("%s\n", $$); 
+    }
+    | expr OR expr         
+    { 
+        printf("OR\t"); 
+        $$ = concat($1, "||", $3); 
+        printf("%s\n", $$); 
+    }
+    | expr AND expr         
+    { 
+        printf("AND\t"); 
+        $$ = concat($1, "&&", $3); 
+        printf("%s\n", $$); 
+    }
+    | expr '|' expr         
+    { 
+        printf("BITWISE OR\t"); 
+        $$ = concat($1, "|", $3); 
+        printf("%s\n", $$); 
+    }
+    | expr '^' expr         
+    { 
+        printf("BITWISE XOR\t"); 
+        $$ = concat($1, "^", $3); 
+        printf("%s\n", $$); 
+    }
+    | expr '&' expr         
+    { 
+        printf("BITWISE AND\t"); 
+        $$ = concat($1, "&", $3); 
+        printf("%s\n", $$); 
+    }
+    | expr EQ expr         
+    { 
+        printf("EQ\t"); 
+        $$ = concat($1, "==", $3); 
+        printf("%s\n", $$); 
+    }
+    | expr NE expr         
+    { 
+        printf("NE\t"); 
+        $$ = concat($1, "!=", $3); 
+        printf("%s\n", $$); 
+    }
+    | expr '<' expr         
+    { 
+        printf("LT\t"); 
+        $$ = concat($1, "<", $3); 
+        printf("%s\n", $$); 
+    }
+    | expr '>' expr         
+    { 
+        printf("GT\t"); 
+        $$ = concat($1, ">", $3); 
+        printf("%s\n", $$); 
+    }
+    | expr LE expr         
+    { 
+        printf("LE\t"); 
+        $$ = concat($1, "<=", $3); 
+        printf("%s\n", $$); 
+    }
+    | expr GE expr         
+    { 
+        printf("GE\t"); 
+        $$ = concat($1, ">=", $3); 
+        printf("%s\n", $$); 
+    }
+    | expr '+' expr         
     { 
         printf("ADD\t"); 
         $$ = concat($1, "+", $3); 
@@ -210,6 +300,18 @@ expr
         $$ = concat("+", $2, ""); 
         printf("%s\n", $$); 
     }
+    | '!' expr %prec '!'    
+    { 
+        printf("NOT\t"); 
+        $$ = concat("!", $2, ""); 
+        printf("%s\n", $$); 
+    }
+    | '~' expr %prec '~'    
+    { 
+        printf("BITWISE NOT\t"); 
+        $$ = concat("~", $2, ""); 
+        printf("%s\n", $$); 
+    }
     | factor                { $$ = $1;}
 
 factor
@@ -221,6 +323,11 @@ factor
     { 
         printf("IDENTIFIER\t%s\n", $1);
     }
+    | call_stmt
+    { 
+        $$ = $1; 
+        printf("%s\n", $$);
+    }
 
 return_stmt
     : RETURN expr       
@@ -228,6 +335,16 @@ return_stmt
         printf("RETURN\t"); 
         $$ = concat("return", " ", $2); 
         printf("%s\n", $$); 
+    }
+
+call_stmt
+    : IDENTIFIER '(' argument ')'
+    {
+        printf("CALL\t");
+        char* func_name = $1;
+        char* func_args = concat("(", $3, ")"); 
+        $$ = concat(func_name, func_args, "");
+        printf("%s\n", $$);
     }
 
 %%
