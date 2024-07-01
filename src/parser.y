@@ -83,11 +83,15 @@ program
     { 
         printf("function\n");
         printf("%s\n", $1->origin); 
+        showAllVar();
+        freeAllVar();
     }
     | program function
     { 
         printf("function\n");
         printf("%s\n", $2->origin); 
+        showAllVar();
+        freeAllVar();
     }
     ;
 
@@ -98,6 +102,7 @@ function
         char* func_params = concat("(", $4->origin, ")");
         char* func_body = concat("{\n", $7->origin, "\n}");
         $$ = new_code(concat(func_def, func_params, func_body));
+        is_begin_decl = 0;
     }
     ;
 
@@ -109,12 +114,14 @@ parameter
     | type_dec IDENTIFIER
     { 
         $$ = new_code(concat(itoType($1), " ", $2->origin)); 
+        is_begin_decl = 0;
     }
     | parameter ',' type_dec IDENTIFIER
     { 
         char* para1 = $1->origin;
         char* para2 = concat(itoType($3), " ", $4->origin);
         $$ = new_code(concat(para1, ", ", para2)); 
+        is_begin_decl = 0;
     }
     ;
 
@@ -173,12 +180,21 @@ decl_stmt
     : type_dec id_list  
     { 
         $$ = new_code(concat(itoType($1), " ", $2->origin)); 
+        is_begin_decl = 0;
     }
     ;
 
 type_dec
-    : INT               { $$ = 1; }
-    | VOID              { $$ = 2; }
+    : INT
+    { 
+        $$ = 1; 
+        is_begin_decl = 1;
+    }
+    | VOID
+    { 
+        $$ = 2;
+        is_begin_decl = 1;
+    }
     ;
 
 id_list
@@ -190,15 +206,23 @@ id_list
     ;
 
 id_elem
-    : IDENTIFIER            { $$ = $1; }
+    : IDENTIFIER
+    { 
+        $$ = $1;
+        if (is_begin_decl){
+            varrec* new_var = putVar($1->origin);
+        }
+    }
     | assign_stmt           { $$ = $1; }
-    | call_stmt             { $$ = $1; }
     ;
 
 assign_stmt
     : IDENTIFIER '=' expr  
     { 
         $$ = new_code(concat($1->origin, "=", $3->origin)); 
+        if (is_begin_decl){
+            varrec* new_var = putVar($1->origin);
+        }
     }
     ;
 
@@ -296,10 +320,12 @@ expr
 
 factor
     : INT_NUMBER        
-    { 
+    {
+        $$ = $1;
     }
     | IDENTIFIER          
-    { 
+    {
+        $$ = $1;
     }
     | call_stmt
     { 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdio.h>
 #include <assert.h>
 #include <stdlib.h> /* malloc, realloc. */
 #include <string.h> /* strlen. */
@@ -17,5 +18,8 @@ extern varrec *var_table;
 extern int var_count;
 extern int is_begin_decl;
 
-varrec *putvar (char const *name, int index);
-varrec *getvar (char const *name);
+varrec *putVar (char const *name);
+varrec *getVar (char const *name);
+const char* getVarAddr (char const *name);
+void showAllVar (void);
+void freeAllVar (void);

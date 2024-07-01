@@ -20,7 +20,6 @@
 
 %union {
     int intval;
-    char* strval;
     code* codeval;
 }
 
@@ -33,31 +32,31 @@
 %token BREAK
 %token CONTINUE
 %token RETURN
-%token <strval>     IDENTIFIER
-%token <strval>     INT_NUMBER
+%token <codeval>     IDENTIFIER
+%token <codeval>     INT_NUMBER
 
-%type <strval> program
-%type <strval> function
-%type <strval> parameter
-%type <strval> argument
+%type <codeval> program
+%type <codeval> function
+%type <codeval> parameter
+%type <codeval> argument
 
-%type <strval> statements
-%type <strval> statement
-%type <strval> sentence 
+%type <codeval> statements
+%type <codeval> statement
+%type <codeval> sentence 
 
-%type <strval> decl_stmt
+%type <codeval> decl_stmt
 %type <intval> type_dec
-%type <strval> id_list
-%type <strval> id_elem
+%type <codeval> id_list
+%type <codeval> id_elem
 
-%type <strval> return_stmt 
-%type <strval> assign_stmt
-%type <strval> call_stmt
-%type <strval> expr 
-%type <strval> factor 
+%type <codeval> return_stmt 
+%type <codeval> assign_stmt
+%type <codeval> call_stmt
+%type <codeval> expr 
+%type <codeval> factor 
 
-%type <strval> if_stmt
-%type <strval> while_stmt
+%type <codeval> if_stmt
+%type <codeval> while_stmt
 
 %start program
 
@@ -83,50 +82,46 @@ program
     : function
     { 
         printf("function\n");
-        printf("%s\n", $1); 
+        printf("%s\n", $1->origin); 
     }
     | program function
     { 
         printf("function\n");
-        printf("%s\n", $2); 
+        printf("%s\n", $2->origin); 
     }
     ;
 
 function
     : type_dec IDENTIFIER '(' parameter ')' '{' statements '}' 
     { 
-        char* func_def = concat(itoType($1), " ", $2);
-        char* func_params = concat("(", $4, ")");
-        char* func_body = concat("{\n", $7, "\n}");
-        $$ = concat(func_def, func_params, func_body);
+        char* func_def = concat(itoType($1), " ", $2->origin);
+        char* func_params = concat("(", $4->origin, ")");
+        char* func_body = concat("{\n", $7->origin, "\n}");
+        $$ = new_code(concat(func_def, func_params, func_body));
     }
     ;
 
 parameter
     : %empty
     { 
-        $$ = " "; 
+        $$ = new_code(" "); 
     }
     | type_dec IDENTIFIER
     { 
-        printf("parameter\t"); 
-        $$ = concat(itoType($1), " ", $2); 
-        printf("%s\n", $$); 
+        $$ = new_code(concat(itoType($1), " ", $2->origin)); 
     }
     | parameter ',' type_dec IDENTIFIER
     { 
-        printf("parameter\t"); 
-        char* para1 = $1;
-        char* para2 = concat(itoType($3), " ", $4);
-        $$ = concat(para1, ", ", para2); 
-        printf("%s\n", $$); 
+        char* para1 = $1->origin;
+        char* para2 = concat(itoType($3), " ", $4->origin);
+        $$ = new_code(concat(para1, ", ", para2)); 
     }
     ;
 
 argument
     : %empty
     { 
-        $$ = " "; 
+        $$ = new_code(" "); 
     }
     | expr
     { 
@@ -134,7 +129,7 @@ argument
     }
     | argument ',' expr
     { 
-        $$ = concat($1, ", ", $3); 
+        $$ = new_code(concat($1->origin, ", ", $3->origin)); 
     }
     ;   
 
@@ -145,14 +140,14 @@ statements
     }
     | statements statement
     { 
-        $$ = concat($1, "\n", $2); 
+        $$ = new_code(concat($1->origin, "\n", $2->origin)); 
     }
     ;
 
 statement
     : sentence ';'              
     { 
-        $$ = concat($1, " ", ";");
+        $$ = new_code(concat($1->origin, " ", ";"));
     }
     | if_stmt
     { 
@@ -169,17 +164,15 @@ sentence
     | assign_stmt       { $$ = $1; }
     | return_stmt       { $$ = $1; }
     | call_stmt         { $$ = $1; }
-    | %empty            { $$ = " "; }
-    | BREAK             { $$ = "break";}
-    | CONTINUE          { $$ = "continue";} 
+    | %empty            { $$ = new_code(" "); }
+    | BREAK             { $$ = new_code("break");}
+    | CONTINUE          { $$ = new_code("continue");} 
     ;
 
 decl_stmt
     : type_dec id_list  
     { 
-        printf("DECL\t"); 
-        $$ = concat(itoType($1), " ", $2); 
-        printf("%s\n", $$);
+        $$ = new_code(concat(itoType($1), " ", $2->origin)); 
     }
     ;
 
@@ -191,8 +184,7 @@ type_dec
 id_list
     : id_elem ',' id_list   
     { 
-        $$ = concat($1, ",", $3); 
-        printf("%s\n", $$); 
+        $$ = new_code(concat($1->origin, ",", $3->origin)); 
     }
     | id_elem               { $$ = $1; }
     ;
@@ -206,144 +198,98 @@ id_elem
 assign_stmt
     : IDENTIFIER '=' expr  
     { 
-        printf("ASSIGN\t"); 
-        $$ = concat($1, "=", $3); 
-        printf("%s\n", $$); 
+        $$ = new_code(concat($1->origin, "=", $3->origin)); 
     }
     ;
 
 expr
     : expr '=' expr         
     { 
-        printf("ASSIGN\t"); 
-        $$ = concat($1, "=", $3); 
-        printf("%s\n", $$); 
+        $$ = new_code(concat($1->origin, "=", $3->origin));
     }
     | expr OR expr         
     { 
-        printf("OR\t"); 
-        $$ = concat($1, "||", $3); 
-        printf("%s\n", $$); 
+        $$ = new_code(concat($1->origin, "||", $3->origin));
     }
     | expr AND expr         
     { 
-        printf("AND\t"); 
-        $$ = concat($1, "&&", $3); 
-        printf("%s\n", $$); 
+        $$ = new_code(concat($1->origin, "&&", $3->origin));
     }
     | expr '|' expr         
     { 
-        printf("BITWISE OR\t"); 
-        $$ = concat($1, "|", $3); 
-        printf("%s\n", $$); 
+        $$ = new_code(concat($1->origin, "|", $3->origin));
     }
     | expr '^' expr         
     { 
-        printf("BITWISE XOR\t"); 
-        $$ = concat($1, "^", $3); 
-        printf("%s\n", $$); 
+        $$ = new_code(concat($1->origin, "^", $3->origin));
     }
     | expr '&' expr         
     { 
-        printf("BITWISE AND\t"); 
-        $$ = concat($1, "&", $3); 
-        printf("%s\n", $$); 
+        $$ = new_code(concat($1->origin, "&", $3->origin));
     }
     | expr EQ expr         
     { 
-        printf("EQ\t"); 
-        $$ = concat($1, "==", $3); 
-        printf("%s\n", $$); 
+        $$ = new_code(concat($1->origin, "==", $3->origin));
     }
     | expr NE expr         
     { 
-        printf("NE\t"); 
-        $$ = concat($1, "!=", $3); 
-        printf("%s\n", $$); 
+        $$ = new_code(concat($1->origin, "!=", $3->origin));
     }
     | expr '<' expr         
     { 
-        printf("LT\t"); 
-        $$ = concat($1, "<", $3); 
-        printf("%s\n", $$); 
+        $$ = new_code(concat($1->origin, "<", $3->origin));
     }
     | expr '>' expr         
     { 
-        printf("GT\t"); 
-        $$ = concat($1, ">", $3); 
-        printf("%s\n", $$); 
+        $$ = new_code(concat($1->origin, ">", $3->origin));
     }
     | expr LE expr         
     { 
-        printf("LE\t"); 
-        $$ = concat($1, "<=", $3); 
-        printf("%s\n", $$); 
+        $$ = new_code(concat($1->origin, "<=", $3->origin));
     }
     | expr GE expr         
     { 
-        printf("GE\t"); 
-        $$ = concat($1, ">=", $3); 
-        printf("%s\n", $$); 
+        $$ = new_code(concat($1->origin, ">=", $3->origin));
     }
     | expr '+' expr         
     { 
-        printf("ADD\t"); 
-        $$ = concat($1, "+", $3); 
-        printf("%s\n", $$); 
+        $$ = new_code(concat($1->origin, "+", $3->origin));
     }
     | expr '-' expr         
     { 
-        printf("SUB\t"); 
-        $$ = concat($1, "-", $3); 
-        printf("%s\n", $$); 
+        $$ = new_code(concat($1->origin, "-", $3->origin));
     }
     | expr '*' expr         
     { 
-        printf("MUL\t"); 
-        $$ = concat($1, "*", $3); 
-        printf("%s\n", $$); 
+        $$ = new_code(concat($1->origin, "*", $3->origin));
     }
     | expr '/' expr         
     { 
-        printf("DIV\t"); 
-        $$ = concat($1, "/", $3); 
-        printf("%s\n", $$); 
+        $$ = new_code(concat($1->origin, "/", $3->origin));
     }
     | expr '%' expr         
     { 
-        printf("MOD\t"); 
-        $$ = concat($1, "%", $3); 
-        printf("%s\n", $$); 
+        $$ = new_code(concat($1->origin, "%", $3->origin));
     }
     | '(' expr ')'          
     { 
-        printf("PAREN\t"); 
-        $$ = concat("(", $2, ")"); 
-        printf("%s\n", $$); 
+        $$ = new_code(concat("(", $2->origin, ")"));
     }
     | '-' expr %prec NEG    
     { 
-        printf("NEG\t"); 
-        $$ = concat("-", $2, ""); 
-        printf("%s\n", $$); 
+        $$ = new_code(concat("-", $2->origin, ""));
     }
     | '+' expr %prec POS    
     { 
-        printf("POS\t"); 
-        $$ = concat("+", $2, ""); 
-        printf("%s\n", $$); 
+        $$ = new_code(concat("+", $2->origin, ""));
     }
     | '!' expr %prec '!'    
     { 
-        printf("NOT\t"); 
-        $$ = concat("!", $2, ""); 
-        printf("%s\n", $$); 
+        $$ = new_code(concat("!", $2->origin, ""));
     }
     | '~' expr %prec '~'    
     { 
-        printf("BITWISE NOT\t"); 
-        $$ = concat("~", $2, ""); 
-        printf("%s\n", $$); 
+        $$ = new_code(concat("~", $2->origin, ""));
     }
     | factor                { $$ = $1;}
     ;
@@ -351,67 +297,54 @@ expr
 factor
     : INT_NUMBER        
     { 
-        printf("INTEGER \t%s\n", $1);
     }
     | IDENTIFIER          
     { 
-        printf("IDENTIFIER\t%s\n", $1);
     }
     | call_stmt
     { 
         $$ = $1; 
-        printf("%s\n", $$);
     }
     ;
 
 return_stmt
     : RETURN expr       
     { 
-        printf("RETURN\t"); 
-        $$ = concat("return", " ", $2); 
-        printf("%s\n", $$); 
+        $$ = new_code(concat("return", " ", $2->origin));
     }
     ;
 
 call_stmt
     : IDENTIFIER '(' argument ')'
     {
-        printf("CALL\t");
-        char* func_name = $1;
-        char* func_args = concat("(", $3, ")"); 
-        $$ = concat(func_name, func_args, "");
-        printf("%s\n", $$);
+        char* func_name = $1->origin;
+        char* func_args = concat("(", $3->origin, ")"); 
+        $$ = new_code(concat(func_name, func_args, ""));
     }
     ;
 
 if_stmt
     : IF '(' expr ')' '{' statements '}'
     {
-        printf("IF\t");
-        char* if_cond = concat("(", $3, ")");
-        char* if_body = concat("\n{\n", $6, "\n}\n");
-        $$ = concat("if ", if_cond, if_body);
-        printf("%s\n", $$);
+        char* if_cond = concat("(", $3->origin, ")");
+        char* if_body = concat("\n{\n", $6->origin, "\n}\n");
+        $$ = new_code(concat("if ", if_cond, if_body));
     }
     | IF '(' expr ')' '{' statements '}' ELSE '{' statements '}'
     {
-        printf("IF ELSE\t");
-        char* if_cond = concat("if (", $3, ")");
-        char* if_body = concat("\n{\n", $6, "\n}\n");
-        char* else_body = concat("else \n{\n", $10, "\n}\n");
-        $$ = concat(if_cond, if_body, else_body);
-        printf("%s\n", $$);
+        char* if_cond = concat("if (", $3->origin, ")");
+        char* if_body = concat("\n{\n", $6->origin, "\n}\n");
+        char* else_body = concat("else \n{\n", $10->origin, "\n}\n");
+        $$ = new_code(concat(if_cond, if_body, else_body));
     }
     ;
 
 while_stmt
     : WHILE '(' expr ')' '{' statements '}'
     {
-        printf("WHILE\t");
-        char* while_cond = concat("(", $3, ")");
-        char* while_body = concat("\n{\n", $6, "\n}\n");
-        $$ = concat("while", while_cond, while_body);
-        printf("%s\n", $$);
+        char* while_cond = concat("(", $3->origin, ")");
+        char* while_body = concat("\n{\n", $6->origin, "\n}\n");
+        $$ = new_code(concat("while", while_cond, while_body));
     }
     ;
 

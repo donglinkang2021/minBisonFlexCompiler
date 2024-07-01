@@ -7,6 +7,7 @@
         "system_error": "c",
         "string.h": "c",
         "assembly.h": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "assert.h": "c"
     }
 }
