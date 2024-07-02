@@ -112,6 +112,18 @@ void showAllFunc (void){
     printf ("%10s\t%d\t%d\n", p->name, p->arg_count, p->var_count);
 }
 
+char* getAllFunc(void){
+  char *res = (char *) malloc (1);
+  res[0] = '\0';
+  for (funcrec *p = func_table; p; p = p->next){
+    char *new_res = (char *) malloc (strlen (res) + strlen (p->name) + 30);
+    sprintf (new_res, "%s.global %s\n", res, p->name);
+    free (res);
+    res = new_res;
+  }
+  return res;
+}
+
 void freeAllFunc (void){
   for (funcrec *p = func_table; p; p = p->next){
     free (p->name);

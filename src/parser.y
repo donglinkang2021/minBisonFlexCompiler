@@ -97,17 +97,19 @@
 
 begin
     : program
-    { 
-        char* begin_label = ".intel_syntax noprefix\n"
-                            ".global main\n"
-                            ".extern printf\n"
+    {   
+        char* begin_label = ".intel_syntax noprefix\n";
+        char* global_func = getAllFunc();
+        char* other_asm =   ".extern printf\n"
                             ".data\n"
                             "format_str:\n"
                             ".asciz \"%d\\n\"\n"
                             ".text\n";
-        char* asm_code = concat(begin_label, "\r\n", $1->assembly);
+        char* header = concat(begin_label, global_func, other_asm);
+        char* asm_code = concat(header, "\r\n", $1->assembly);
         // printf("Assembly code:\n%s\n", asm_code); 
         printf("%s\n", asm_code); 
+        // showAllFunc();
     }
     ;
 

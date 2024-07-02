@@ -54,3 +54,4 @@ funcrec *putFunc (char const *name, int arg_count, int var_count);
 funcrec *getFunc (char const *name);
 void showAllFunc (void);
 void freeAllFunc (void);
+char* getAllFunc(void);

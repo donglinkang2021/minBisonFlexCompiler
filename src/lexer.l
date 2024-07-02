@@ -26,7 +26,7 @@ continue    { return CONTINUE; }
 return      { return RETURN; }
 	
 	/* user variable */
-[a-zA-Z][a-zA-Z0-9_]*       { yylval.codeval = new_code(strdup(yytext)); return IDENTIFIER; }
+[a-zA-Z_][a-zA-Z0-9_]*       { yylval.codeval = new_code(strdup(yytext)); return IDENTIFIER; }
 	/* integer numbers */
 -?[0-9]+                    { yylval.codeval = new_code(strdup(yytext)); return INT_NUMBER; }
 	/* C-type strings */

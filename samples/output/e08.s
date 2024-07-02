@@ -1,5 +1,6 @@
 .intel_syntax noprefix
 .global main
+.global factorial
 .extern printf
 .data
 format_str:
