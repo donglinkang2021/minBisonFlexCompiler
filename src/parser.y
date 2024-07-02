@@ -2,12 +2,14 @@
     #include <stdio.h>
     #include "utils.h"
     #include "symbol.h"
+    #include "label.h"
     varrec *var_table;
     int var_count = 0, is_begin_decl = 0;
     varrec *arg_table;
     int arg_count = 0;
     funcrec *func_table;
     int if_count = 0, while_count = 0;
+    labelrec *label_stack;
     extern int yylex(void);
 %}
 
@@ -252,13 +254,15 @@ sentence
     | BREAK             
     { 
         $$ = new_code("break");
-        char* label = concat(".L_while_tail", "_", itoHex(while_count));
+        char* count = label_stack->label;
+        char* label = concat(".L_while_tail", "_", count);
         $$->assembly = concat("jmp ", label, "\n");
     }
     | CONTINUE          
     { 
         $$ = new_code("continue");
-        char* label = concat(".L_while_head", "_", itoHex(while_count));
+        char* count = label_stack->label;
+        char* label = concat(".L_while_head", "_", count);
         $$->assembly = concat("jmp ", label, "\n");
     } 
     ;
@@ -675,23 +679,26 @@ while_stmt
         char* while_stmt_asm = concat(while_head_asm, while_cond_asm, jump_end);
         char* while_body_stmt_asm = concat(while_body_asm, jump_head, while_end_asm);
         $$->assembly = concat(while_stmt_asm, while_body_stmt_asm, "\n");
-        while_count++;
     }
     ;
 
 label_while_head
     : %empty
     {
-        char* label = concat(".L_while_head", "_", itoHex(while_count));
+        char* count = itoHex(while_count);
+        char* label = concat(".L_while_head", "_", count);
+        pushLabel(count);
         $$ = new_code(label);
         $$->assembly = concat(label, ":", "\n");
+        while_count++;
     }
     ;
 
 label_while_tail
     : %empty
-    {
-        char* label = concat(".L_while_tail", "_", itoHex(while_count));
+    {   
+        char* count = popLabel();
+        char* label = concat(".L_while_tail", "_", count);
         $$ = new_code(label);
         $$->assembly = concat(label, ":", "\n");
     }
