@@ -40,6 +40,8 @@
 
 %type <codeval> program
 %type <codeval> function
+%type <codeval> func_decl
+%type <codeval> func_body
 %type <codeval> parameter
 %type <codeval> argument
 
@@ -127,18 +129,11 @@ program
     ;
 
 function
-    : type_dec IDENTIFIER '(' parameter ')' '{' statements '}' 
+    :  func_decl func_body
     { 
-        char* func_def = concat(itoType($1), " ", $2->origin);
-        char* func_params = concat("(", $4->origin, ")");
-        char* func_body = concat("{\n", $7->origin, "\n}");
-        $$ = new_code(concat(func_def, func_params, func_body));
+        $$ = new_code(concat($1->origin, $2->origin, ""));
         
-        is_begin_decl = 0;
-        putFunc($2->origin, arg_count, var_count);
-    
-        char* func_label = concat($2->origin, ":", "\n");
-
+        char* func_label = concat(func_table->name, ":", "\n");
         char* func_prologue = "push ebp\nmov ebp, esp\n";
         char* sub_esp;
         if (strcmp($2->origin, "main") == 0){
@@ -148,8 +143,27 @@ function
         }
         func_prologue = concat(func_label, func_prologue, sub_esp);
         char* func_epilogue = "leave\nret\n";
-        char* func_asm = concat(func_prologue, $7->assembly, func_epilogue);
+        char* func_asm = concat(func_prologue, $2->assembly, func_epilogue);
         $$->assembly = func_asm;
+    }
+    ;
+
+func_decl
+    : type_dec IDENTIFIER '(' parameter ')'
+    { 
+        is_begin_decl = 0;
+        char* func_def = concat(itoType($1), " ", $2->origin);
+        char* func_params = concat("(", $4->origin, ")");
+        $$ = new_code(concat(func_def, func_params, ""));
+        putFunc($2->origin, arg_count, var_count);
+    }
+    ;
+
+func_body
+    : '{' statements '}'
+    { 
+        $$ = new_code(concat("{\n", $2->origin, "\n}"));
+        $$->assembly = $2->assembly;
     }
     ;
 
