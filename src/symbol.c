@@ -81,3 +81,10 @@ void freeAllArg (void){
   arg_table = NULL;
   arg_count = 0;
 }
+
+const char* getVarOrArgAddr (char const *name){
+  const char *res = getVarAddr (name);
+  if (res == NULL)
+    res = getArgAddr (name);
+  return res;
+}

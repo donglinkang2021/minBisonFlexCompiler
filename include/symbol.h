@@ -34,3 +34,6 @@ varrec *getArg (char const *name);
 const char* getArgAddr (char const *name);
 void showAllArg (void);
 void freeAllArg (void);
+
+// get the index of the variable
+const char* getVarOrArgAddr (char const *name);
