@@ -88,3 +88,34 @@ const char* getVarOrArgAddr (char const *name){
     res = getArgAddr (name);
   return res;
 }
+
+funcrec* putFunc (char const *name, int arg_count, int var_count){
+  funcrec *res = (funcrec *) malloc (sizeof (funcrec));
+  res->name = strdup (name);
+  res->arg_count = arg_count;
+  res->var_count = var_count;
+  res->next = func_table;
+  func_table = res;
+  return res;
+}
+
+funcrec* getFunc (char const *name){
+  for (funcrec *p = func_table; p; p = p->next)
+    if (strcmp (p->name, name) == 0)
+      return p;
+  return NULL;
+}
+
+void showAllFunc (void){
+  printf ("Function table:\n");
+  for (funcrec *p = func_table; p; p = p->next)
+    printf ("%10s\t%d\t%d\n", p->name, p->arg_count, p->var_count);
+}
+
+void freeAllFunc (void){
+  for (funcrec *p = func_table; p; p = p->next){
+    free (p->name);
+    free (p);
+  }
+  func_table = NULL;
+}

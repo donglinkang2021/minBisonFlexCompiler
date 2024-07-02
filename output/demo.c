@@ -15,10 +15,17 @@ int demo(int a, int b) {
     return a + b;
 }
 
+char* itoHex(int num) {
+    char* temp = malloc(10);
+    sprintf(temp, "0x%x", num);
+    return temp;
+}
+
 int main(int argc, const char *args[])
 {
     char* c = concat("1", "2", "+");
     printf("%s\n", c);
+    printf("%s\n", itoHex(255 + 1));
     return 0;
 }
 

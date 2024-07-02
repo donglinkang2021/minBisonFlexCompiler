@@ -6,6 +6,7 @@
     int var_count = 0, is_begin_decl = 0;
     varrec *arg_table;
     int arg_count = 0;
+    funcrec *func_table;
     extern int yylex(void);
 %}
 
@@ -132,13 +133,22 @@ function
         char* func_params = concat("(", $4->origin, ")");
         char* func_body = concat("{\n", $7->origin, "\n}");
         $$ = new_code(concat(func_def, func_params, func_body));
-        is_begin_decl = 0;
         
+        is_begin_decl = 0;
+        putFunc($2->origin, arg_count, var_count);
+    
         char* func_label = concat($2->origin, ":", "\n");
-        // todo : add assembly code of function prologue to count the number of local variables
-        char* func_prologue = "push ebp\nmov ebp, esp\nsub esp, 0x100\n";
-        char* func_asm = concat(func_label, func_prologue, $7->assembly);
 
+        char* func_prologue = "push ebp\nmov ebp, esp\n";
+        char* sub_esp;
+        if (strcmp($2->origin, "main") == 0){
+            sub_esp = "sub esp, 0x100\n";
+        } else {
+            sub_esp = concat("sub esp, ", itoHex(var_count * 4 + 8), "\n");
+        }
+        func_prologue = concat(func_label, func_prologue, sub_esp);
+        char* func_epilogue = "leave\nret\n";
+        char* func_asm = concat(func_prologue, $7->assembly, func_epilogue);
         $$->assembly = func_asm;
     }
     ;
@@ -172,13 +182,12 @@ argument
     | expr
     { 
         $$ = $1; 
+        $$->assembly = concat($1->assembly, "push eax", "\n");
     }
     | argument ',' expr
     { 
         $$ = new_code(concat($1->origin, ", ", $3->origin)); 
-        char* left_asm = concat($1->assembly, "push eax", "\n");
-        char* right_asm = concat($3->assembly, "push eax", "\n");
-        $$->assembly = concat(right_asm, "\n", left_asm);
+        $$->assembly = concat($3->assembly, "push eax\n", $1->assembly);
     }
     ;   
 
@@ -282,11 +291,38 @@ expr
     { 
         $$ = new_code(concat($1->origin, "||", $3->origin));
         
+        char* expr1_asm = $1->assembly;
+        char* expr2_asm = $3->assembly;
+
+        char* expr2 = concat(expr2_asm, "push eax", "\n");
+        char* expr1 = concat(expr1_asm, "pop ebx", "\n");
+        char* logical_or_asm =  "test eax, eax\n"
+                                "setne al\n"
+                                "test ebx, ebx\n"
+                                "setne bl\n"
+                                "or al, bl\n"
+                                "movzx eax, al\n";
+
+        $$->assembly = concat(expr2, expr1, logical_or_asm);
 
     }
     | expr AND expr         
     { 
         $$ = new_code(concat($1->origin, "&&", $3->origin));
+
+        char* expr1_asm = $1->assembly;
+        char* expr2_asm = $3->assembly;
+
+        char* expr2 = concat(expr2_asm, "push eax", "\n");
+        char* expr1 = concat(expr1_asm, "pop ebx", "\n");
+        char* logical_or_asm =  "test eax, eax\n"
+                                "setne al\n"
+                                "test ebx, ebx\n"
+                                "setne bl\n"
+                                "and al, bl\n"
+                                "movzx eax, al\n";
+
+        $$->assembly = concat(expr2, expr1, logical_or_asm);
     }
     | expr '|' expr         
     { 
@@ -327,26 +363,74 @@ expr
     | expr EQ expr         
     { 
         $$ = new_code(concat($1->origin, "==", $3->origin));
+        char* expr1_asm = $1->assembly;
+        char* expr2_asm = $3->assembly;
+
+        char* expr2 = concat(expr2_asm, "push eax", "\n");
+        char* expr1 = concat(expr1_asm, "pop ebx", "\n");
+        char* eq_asm = concat(expr2, expr1, "cmp eax, ebx\nsete al\nmovzx eax, al\n");
+
+        $$->assembly = eq_asm;
     }
     | expr NE expr         
     { 
         $$ = new_code(concat($1->origin, "!=", $3->origin));
+        char* expr1_asm = $1->assembly;
+        char* expr2_asm = $3->assembly;
+
+        char* expr2 = concat(expr2_asm, "push eax", "\n");
+        char* expr1 = concat(expr1_asm, "pop ebx", "\n");
+        char* ne_asm = concat(expr2, expr1, "cmp eax, ebx\nsetne al\nmovzx eax, al\n");
+
+        $$->assembly = ne_asm;
     }
     | expr '<' expr         
     { 
         $$ = new_code(concat($1->origin, "<", $3->origin));
+        char* expr1_asm = $1->assembly;
+        char* expr2_asm = $3->assembly;
+
+        char* expr2 = concat(expr2_asm, "push eax", "\n");
+        char* expr1 = concat(expr1_asm, "pop ebx", "\n");
+        char* lt_asm = concat(expr2, expr1, "cmp eax, ebx\nsetl al\nmovzx eax, al\n");
+
+        $$->assembly = lt_asm;
     }
     | expr '>' expr         
     { 
         $$ = new_code(concat($1->origin, ">", $3->origin));
+        char* expr1_asm = $1->assembly;
+        char* expr2_asm = $3->assembly;
+
+        char* expr2 = concat(expr2_asm, "push eax", "\n");
+        char* expr1 = concat(expr1_asm, "pop ebx", "\n");
+        char* gt_asm = concat(expr2, expr1, "cmp eax, ebx\nsetg al\nmovzx eax, al\n");
+
+        $$->assembly = gt_asm;
     }
     | expr LE expr         
     { 
         $$ = new_code(concat($1->origin, "<=", $3->origin));
+        char* expr1_asm = $1->assembly;
+        char* expr2_asm = $3->assembly;
+
+        char* expr2 = concat(expr2_asm, "push eax", "\n");
+        char* expr1 = concat(expr1_asm, "pop ebx", "\n");
+        char* le_asm = concat(expr2, expr1, "cmp eax, ebx\nsetle al\nmovzx eax, al\n");
+
+        $$->assembly = le_asm;
     }
     | expr GE expr         
     { 
         $$ = new_code(concat($1->origin, ">=", $3->origin));
+        char* expr1_asm = $1->assembly;
+        char* expr2_asm = $3->assembly;
+
+        char* expr2 = concat(expr2_asm, "push eax", "\n");
+        char* expr1 = concat(expr1_asm, "pop ebx", "\n");
+        char* ge_asm = concat(expr2, expr1, "cmp eax, ebx\nsetge al\nmovzx eax, al\n");
+
+        $$->assembly = ge_asm;
     }
     | expr '+' expr         
     { 
@@ -426,6 +510,7 @@ expr
     | '!' expr %prec '!'    
     { 
         $$ = new_code(concat("!", $2->origin, ""));
+        $$->assembly = concat($2->assembly, "test eax, eax\nsete al\nmovzx eax, al\n", "");
     }
     | '~' expr %prec '~'    
     { 
@@ -459,7 +544,7 @@ return_stmt
     : RETURN expr       
     { 
         $$ = new_code(concat("return", " ", $2->origin));
-        $$->assembly = concat($2->assembly, "leave\n", "ret\n");
+        $$->assembly = $2->assembly;
     }
     ;
 
@@ -478,9 +563,8 @@ call_stmt
         } else {
             arg_asm = $3->assembly;
             call_asm = concat("call ", func_name, "\n");
-            // todo : add assembly code of how many 
-            // arguments are pushed `add esp, 4*arg_count`
-            add_esp = "";
+            int arg_count = getFunc(func_name)->arg_count;
+            add_esp = concat("add esp, ", itoHex(arg_count * 4), "\n");
         }
         $$->assembly = concat(arg_asm, call_asm, add_esp);
 

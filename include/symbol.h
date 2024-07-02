@@ -37,3 +37,20 @@ void freeAllArg (void);
 
 // get the index of the variable
 const char* getVarOrArgAddr (char const *name);
+
+struct funcrec
+{
+  char *name;   /* name of function */
+  int arg_count;
+  int var_count;
+  struct funcrec *next;  /* link field */
+};
+
+typedef struct funcrec funcrec;
+
+extern funcrec *func_table;
+
+funcrec *putFunc (char const *name, int arg_count, int var_count);
+funcrec *getFunc (char const *name);
+void showAllFunc (void);
+void freeAllFunc (void);

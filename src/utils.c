@@ -26,3 +26,9 @@ char* itoType(int type) {
             return "unknown";
     }
 }
+
+char* itoHex(int num) {
+    char* temp = malloc(10);
+    sprintf(temp, "0x%x", num);
+    return temp;
+}
