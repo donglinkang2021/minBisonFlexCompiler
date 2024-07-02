@@ -1,7 +1,7 @@
 #!/bin/bash
 cmake -S . -B build
 cmake --build build
-test_dir="samples2"
+test_dir="samples"
 for i in {1..8}; do
     filename="$test_dir/cases/e$(printf "%02d" $i).c"
     ansfile="$test_dir/answers/e$(printf "%02d" $i).ans"
