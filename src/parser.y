@@ -7,6 +7,7 @@
     varrec *arg_table;
     int arg_count = 0;
     funcrec *func_table;
+    int if_count = 0, while_count = 0;
     extern int yylex(void);
 %}
 
@@ -60,8 +61,15 @@
 %type <codeval> expr 
 %type <codeval> factor 
 
+// if statement and label
 %type <codeval> if_stmt
+%type <codeval> label_if_tail
+%type <codeval> label_else_head
+
+// while statement and label
 %type <codeval> while_stmt
+%type <codeval> label_while_head
+%type <codeval> label_while_tail
 
 %type <codeval> begin
 
@@ -241,8 +249,18 @@ sentence
     | return_stmt       { $$ = $1; }
     | call_stmt         { $$ = $1; }
     | %empty            { $$ = new_code(" "); }
-    | BREAK             { $$ = new_code("break");}
-    | CONTINUE          { $$ = new_code("continue");} 
+    | BREAK             
+    { 
+        $$ = new_code("break");
+        char* label = concat(".L_while_tail", "_", itoHex(while_count));
+        $$->assembly = concat("jmp ", label, "\n");
+    }
+    | CONTINUE          
+    { 
+        $$ = new_code("continue");
+        char* label = concat(".L_while_head", "_", itoHex(while_count));
+        $$->assembly = concat("jmp ", label, "\n");
+    } 
     ;
 
 decl_stmt
@@ -571,7 +589,7 @@ call_stmt
 
         char *arg_asm, *call_asm, *add_esp;
         if (strcmp(func_name, "println_int") == 0){
-            arg_asm = concat($3->assembly, "push eax\n","push offset format_str\n");
+            arg_asm = concat($3->assembly, "", "push offset format_str\n");
             call_asm = strdup("call printf\n");
             add_esp = strdup("add esp, 8\n");
         } else {
@@ -586,33 +604,96 @@ call_stmt
     ;
 
 if_stmt
-    : IF '(' expr ')' '{' statements '}'
+    : IF '(' expr ')' '{' statements '}' label_if_tail
     {
         char* if_cond = concat("(", $3->origin, ")");
         char* if_body = concat("\n{\n", $6->origin, "\n}\n");
         $$ = new_code(concat("if ", if_cond, if_body));
         // todo : add assembly code of if statement
-        $$->assembly = "";
+        char* if_cond_asm = $3->assembly;
+        char* jump_end = concat("cmp eax, 0\nje ", $8->origin, "\n");
+        char* if_body_asm = $6->assembly;
+        char* if_end_asm = $8->assembly;
+
+        char* if_stmt_asm = concat(if_cond_asm, jump_end, if_body_asm);
+        $$->assembly = concat(if_stmt_asm, if_end_asm, "\n");
+        if_count++;
     }
-    | IF '(' expr ')' '{' statements '}' ELSE '{' statements '}'
+    | IF '(' expr ')' '{' statements '}' ELSE '{' label_else_head statements '}' label_if_tail
     {
         char* if_cond = concat("if (", $3->origin, ")");
         char* if_body = concat("\n{\n", $6->origin, "\n}\n");
-        char* else_body = concat("else \n{\n", $10->origin, "\n}\n");
+        char* else_body = concat("else \n{\n", $11->origin, "\n}\n");
         $$ = new_code(concat(if_cond, if_body, else_body));
         // todo : add assembly code of if-else statement
-        $$->assembly = "";
+        char* if_cond_asm = $3->assembly;
+        char* jump_else = concat("cmp eax, 0\nje ", $10->origin, "\n");
+        char* if_body_asm = $6->assembly;
+        char* jump_end = concat("jmp ", $13->origin, "\n");
+        char* else_body_asm = concat($10->assembly, $11->assembly, "");
+        char* if_end_asm = $13->assembly;
+
+        char* if_stmt_asm = concat(if_cond_asm, jump_else, if_body_asm);
+        char* else_stmt_asm = concat(jump_end, else_body_asm, if_end_asm);
+        $$->assembly = concat(if_stmt_asm, else_stmt_asm, "\n");
+        if_count++;
+    }
+    ;
+
+label_if_tail
+    : %empty
+    {
+        char* label = concat(".L_if_tail", "_", itoHex(if_count));
+        $$ = new_code(label);
+        $$->assembly = concat(label, ":", "\n");
+    }
+    ;
+
+label_else_head
+    : %empty
+    {
+        char* label = concat(".L_else_head", "_", itoHex(if_count));
+        $$ = new_code(label);
+        $$->assembly = concat(label, ":", "\n");
     }
     ;
 
 while_stmt
-    : WHILE '(' expr ')' '{' statements '}'
+    : WHILE '(' label_while_head expr ')' '{' statements '}' label_while_tail
     {
-        char* while_cond = concat("(", $3->origin, ")");
-        char* while_body = concat("\n{\n", $6->origin, "\n}\n");
+        char* while_cond = concat("(", $4->origin, ")");
+        char* while_body = concat("\n{\n", $7->origin, "\n}\n");
         $$ = new_code(concat("while", while_cond, while_body));
         // todo : add assembly code of while statement
-        $$->assembly = "";
+        char* while_head_asm = $3->assembly;
+        char* while_cond_asm = $4->assembly;
+        char* jump_end = concat("cmp eax, 0\nje ", $9->origin, "\n");
+        char* while_body_asm = $7->assembly;
+        char* jump_head = concat("jmp ", $3->origin, "\n");
+        char* while_end_asm = $9->assembly;
+
+        char* while_stmt_asm = concat(while_head_asm, while_cond_asm, jump_end);
+        char* while_body_stmt_asm = concat(while_body_asm, jump_head, while_end_asm);
+        $$->assembly = concat(while_stmt_asm, while_body_stmt_asm, "\n");
+        while_count++;
+    }
+    ;
+
+label_while_head
+    : %empty
+    {
+        char* label = concat(".L_while_head", "_", itoHex(while_count));
+        $$ = new_code(label);
+        $$->assembly = concat(label, ":", "\n");
+    }
+    ;
+
+label_while_tail
+    : %empty
+    {
+        char* label = concat(".L_while_tail", "_", itoHex(while_count));
+        $$ = new_code(label);
+        $$->assembly = concat(label, ":", "\n");
     }
     ;
 
