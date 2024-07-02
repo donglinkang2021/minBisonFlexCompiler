@@ -32,7 +32,7 @@ include_directories(
 )
 
 add_executable(
-    calc
+    Compilerlab4
     ${SRC_DIR}/main.c
     ${SRC_DIR}/utils.c
     ${SRC_DIR}/symbol.c
@@ -41,4 +41,4 @@ add_executable(
     ${LEXER_OUT}
     ${PARSER_OUT}
 )
-target_include_directories(calc PRIVATE ${PARSER_DIR})
+target_include_directories(Compilerlab4 PRIVATE ${PARSER_DIR})
